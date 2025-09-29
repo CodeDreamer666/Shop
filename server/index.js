@@ -1,90 +1,55 @@
 import express from "express";
-import fs from "node:fs/promises";
-import path from "node:path";
 import cors from "cors";
+import validator from "validator";
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
+import bcrypt from "bcryptjs";
+import { taskRouter } from "./routes/task/taskRouter.js";
 
 const PORT = 8000;
-const { writeFile, readFile } = fs;
-const { join } = path;
-const __dirname = import.meta.dirname;
 const app = express();
-const tasksDataPath = join(__dirname, "data", "tasks.json");
 
 app.use(cors());
 app.use(express.json());
 
-app.post("/api/to-do-list", async (req, res) => {
+app.use("/api", taskRouter);
+
+app.post("/api/auth/sign-in", async (req, res) => {
+    let { name, email, password } = req.body;
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: "All Fields are Required" });
+    };
+    name = name.trim();
+    email = email.trim();
+    password = password.trim();
+    if (!/^[a-zA-Z0-9_-]{1,20}$/.test(name)) {
+        return res.status(400).json({ error: 'Name must be 1–20 characters, using letters, numbers, _ or -.' });
+    };
+    if (!validator.isEmail(email)) {
+        return res.status(400).json({ error: "Invalid Email Format" })
+    };
+    const hashpassword = await bcrypt.hash(password, 10);
+    console.log("req.body:" + JSON.stringify({ ...req.body, password: hashpassword }));
     try {
-        const data = await readFile(tasksDataPath, "utf8");
-        const parseData = JSON.parse(data);
-        parseData.push({
-            id: parseData.length + 1,
-            ...req.body
+        const database = await open({
+            filename: join("DB", "users.db"),
+            driver: sqlite3.Database
         });
-        await writeFile(tasksDataPath, JSON.stringify(parseData, null, 2), "utf8");
-        res.json(parseData);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: "Failed to save task" });
-    }
-});
-
-app.get("/api/to-do-list", async (req, res) => {
-    try {
-        const data = await readFile(tasksDataPath, "utf8");
-        const parseData = JSON.parse(data);
-        res.json(parseData);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: "Failed to get task" });
-    }
-});
-
-app.delete("/api/to-do-list/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const data = await readFile(tasksDataPath, "utf8");
-        const parseData = JSON.parse(data);
-        const filteredData = parseData.filter((tasks) => {
-            return tasks.id !== Number(id);
-        })
-        await writeFile(tasksDataPath, JSON.stringify(filteredData, null, 2), "utf8");
-        res.json(filteredData);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: "Failed to delete task" });
-    }
-});
-
-app.get("/api/to-do-list/:id", async (req, res) => {
-    const { id } = req.params;
-    const data = await readFile(tasksDataPath, "utf8");
-    const parseData = JSON.parse(data);
-    const filteredData = parseData.filter((task) => {
-        return task.id === Number(id);
-    });
-    res.json(filteredData)
-});
-
-app.patch("/api/to-do-list/:id", async (req, res) => {
-    const { id } = req.params;
-    const data = await readFile(tasksDataPath, "utf8");
-    const parseData = JSON.parse(data);
-    const updatedData = parseData.map((task) => {
-        if (task.id === Number(id)) {
-            return {
-                ...task,
-                task: req.body.task,
-                details: req.body.details
-            };
-        } else {
-            return task;
+        const existing = await database.get(`SELECT id FROM users WHERE name = ? OR email = ?`, [name, email]);
+        if (existing) {
+            return res.status(400).json({ error: "Email or Name already in use" });
         }
-    });
-    await writeFile(tasksDataPath, JSON.stringify(updatedData, null, 2), "utf8");
-    res.json(updatedData);
+        await database.run(`
+        INSERT INTO users (name, email, password) VALUES (?, ?, ?)`, [name, email, hashpassword]);
+
+        res.status(201).json({ message: "User Registed" });
+
+        await database.close();
+
+    } catch (err) {
+        console.error('Registration error:', err.message);
+        res.status(500).json({ error: 'Registration failed. Please try again.' })
+    }
 })
-
-
 
 app.listen(PORT, () => console.log(`Server is connected at port: ${PORT}`));
