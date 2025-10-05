@@ -12,7 +12,7 @@ const router = createBrowserRouter([
   { path: "/tasks", element: <Tasks /> },
   { path: "/edit/:id", element: <EditTask /> },
   { path: "/login", element: <Login /> },
-  { path: "/sign-in", element: <SignIn /> }
+  { path: "/sign-in", element: <SignIn /> },
 ])
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -4,13 +4,22 @@ import Navbar from "./Navbar";
 
 export default function Tasks() {
     const [tasksData, setTasksData] = useState([]);
+    const [isLoggedIn, setIsLoggedIn] = useState(null);
 
     useEffect(() => {
         const fetchTasksData = async () => {
             try {
-                const response = await fetch("http://localhost:8000/api/get-task");
+                const response = await fetch("http://localhost:8000/api/get-task", {
+                    credentials: "include"
+                });
                 const data = await response.json();
+                if (!data.isLoggedIn) {
+                    setTasksData([]);
+                    setIsLoggedIn(false);
+                    return;
+                }
                 setTasksData(data);
+                setIsLoggedIn(true);
             } catch (err) {
                 console.error(err);
             }
@@ -22,6 +31,7 @@ export default function Tasks() {
         try {
             const response = await fetch(`http://localhost:8000/api/delete-task/${taskId}`, {
                 method: "DELETE",
+                credentials: "include"
             });
 
             if (response.ok) {
@@ -37,10 +47,12 @@ export default function Tasks() {
     return (
         <>
             <Navbar />
-            <section className="mt-8">
-                <ul>
-                    {tasksData.map(({ id, title, description }) => {
-                        return (
+            <section className="mt-20">
+                {!isLoggedIn ? (
+                    <p className="text-center mt-10 text-xl">Please log in to see your tasks</p>
+                ) : (
+                    <ul>
+                        {tasksData.map(({ id, title, description }) => (
                             <li key={id} className="bg-white shadow-md mb-6 max-w-[350px] w-[90%] mx-auto px-6 py-4 rounded-lg hover:shadow-lg transition-all duration-300 cursor-pointer">
                                 <section className="flex flex-col">
                                     <h2 className="text-2xl font-bold">{title}</h2>
@@ -58,9 +70,9 @@ export default function Tasks() {
                                     </div>
                                 </section>
                             </li>
-                        )
-                    })}
-                </ul>
+                        ))}
+                    </ul>
+                )}
             </section>
         </>
     )

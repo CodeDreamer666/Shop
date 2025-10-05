@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 
 export default function SignIn() {
@@ -8,7 +8,8 @@ export default function SignIn() {
     const [passwordInput, setPasswordInput] = useState("");
     const [hasError, setHasError] = useState(null);
     const [isSuccessful, setIsSuccessful] = useState(null);
-    const [backendError, setBackendError]= useState("");
+    const [backendError, setBackendError] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (hasError !== null && isSuccessful !== null) {
@@ -32,7 +33,8 @@ export default function SignIn() {
             const res = await fetch("http://localhost:8000/api/auth/sign-in", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(userInformationToSend)
+                body: JSON.stringify(userInformationToSend),
+                credentials: "include" // Ensure cookies are sent
             });
 
             const data = await res.json();
@@ -42,7 +44,11 @@ export default function SignIn() {
                 setNameInput("");
                 setPasswordInput("");
                 setIsSuccessful(true);
-                setHasError(false)
+                setHasError(false);
+                setTimeout(() => {
+                    navigate("/"); // or any other route
+                    window.location.reload(); // Force refresh if needed
+                }, 1000);
             } else {
                 setIsSuccessful(false);
                 setHasError(true);
@@ -55,9 +61,9 @@ export default function SignIn() {
     return (
         <>
             <Navbar />
-            <section  className="mt-20 w-[90%] max-w-[400px] mx-auto">
+            <section className="mt-20 w-[90%] max-w-[400px] mx-auto min-h-[80vh] flex flex-col items-center justify-center">
                 {hasError && (
-                    <section className="absolute z-10 max-w-[300px] border-2 border-red-500 bg-red-100 text-red-800 shadow-md py-2 px-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                    <section className="absolute z-10 bottom-12 max-w-[300px] border-2 border-red-500 bg-red-100 text-red-800 shadow-md py-2 px-2 rounded-lg hover:shadow-lg transition-all duration-300">
                         <h2 className="font-bold">{backendError}</h2>
                     </section>
                 )}
@@ -81,9 +87,7 @@ export default function SignIn() {
                 </form>
                 {isSuccessful && !hasError && (
                     <section className="absolute z-10 border-2 border-green-500 bg-green-100 text-green-800 shadow-md w-[60%] max-w-[300px] py-2 px-2 rounded-lg hover:shadow-lg transition-all duration-300 ">
-                        <h2 className="font-bold">Task created successfully! You can view it
-                            <Link to="/tasks"> here</Link>
-                        </h2>
+                        <h2 className="font-bold">Registered successfully!</h2>
                     </section>
                 )}
             </section>

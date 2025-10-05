@@ -4,8 +4,13 @@ export const deleteTaskController = async (req, res) => {
     try {
         const { id } = req.params;
         const tasksDB = await getDBTasks();
-        await tasksDB.run("DELETE FROM tasks WHERE id = ?", [id]);
-        const allTask = await tasksDB.all("SELECT * FROM tasks");
+
+        if (!req.session.userId) {
+            return res.status(401).json({ error: "Not Logged In " });
+        }
+
+        await tasksDB.run("DELETE FROM tasks WHERE id = ? AND user_id = ?", [id, req.session.userId]);
+        const allTask = await tasksDB.all("SELECT * FROM tasks WHERE user_id = ?", [req.session.userId]);
         await tasksDB.close();
         res.json(allTask);
     } catch (err) {

@@ -30,7 +30,8 @@ export default function App() {
       const response = await fetch("http://localhost:8000/api/add-task", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(taskToSend)
+        body: JSON.stringify(taskToSend),
+        credentials: "include"
       });
 
       if (response.ok) {
@@ -50,7 +51,7 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <section className="mt-20 w-[90%] max-w-[400px] mx-auto">
+      <section className="mt-20 w-[90%] max-w-[400px] mx-auto min-h-[80vh] flex flex-col items-center justify-center">
         {hasError && (
           <section className="absolute z-10 max-w-[300px] border-2 border-red-500 bg-red-100 text-red-800 shadow-md py-2 px-2 rounded-lg hover:shadow-lg transition-all duration-300">
             <h2 className="font-bold">Oops! Something went wrong. Please try submitting again.</h2>
@@ -58,22 +59,21 @@ export default function App() {
         )}
         <form onSubmit={(event) => handleSubmit(event)}
           className=" w-[90%] max-w-[400px] relative bg-white shadow-md mx-auto flex flex-col rounded-lg py-4 px-6 hover:shadow-lg transition-all duration-300">
-          <h1 className="text-[28px] mt-2 mb-2 font-bold">To-Do List</h1>
-          <label htmlFor="task" className="text-[20px] font-semibold">Task: </label>
+          <h1 className="text-[28px] mt-2 font-bold">To-Do List</h1>
+          <p className="font-semibold italic  mb-4">Stay focused. Stay productive.</p>
+          <label htmlFor="task" className="text-lg font-semibold">Title: </label>
           <input value={title} onChange={(event) => setTitle(event.target.value)}
-            className="border-2 my-2 rounded-sm font-[18px] py-2 px-2"
+            className="border-2 my-2 rounded-sm text-sm py-2 px-2"
             id="task" name="task" type="text" required />
-          <label htmlFor="description" className="text-[20px] font-semibold">Description: </label>
+          <label htmlFor="description" className="text-lg font-semibold">Description: </label>
           <textarea value={description} onChange={(event) => setDescription(event.target.value)}
-            className="resize-none border-2 my-2 rounded-sm font-[18px] py-2 px-2"
-            id="description" name="description" type="text" required cols="10" rows="10" />
+            className="resize-none border-2 my-2 rounded-sm font-sm py-2 px-2"
+            id="description" name="description" type="text" required cols="10" rows="8" />
           <button type="submit" className="border-2 py-1 mt-4 px-6 rounded-lg font-bold text-[20px] hover:bg-black hover:text-white transition-all duration-300 cursor-pointer">Submit</button>
         </form>
         {isSuccessful && !hasError && (
-          <section className="absolute z-10 border-2 border-green-500 bg-green-100 text-green-800 shadow-md w-[60%] max-w-[300px] py-2 px-2 rounded-lg hover:shadow-lg transition-all duration-300 ">
-            <h2 className="font-bold">Task created successfully! You can view it
-              <Link to="/tasks"> here</Link>
-            </h2>
+          <section className="absolute bottom-8 z-10 border-2 border-green-500 bg-green-100 text-green-800 shadow-md w-[60%] max-w-[300px] py-2 px-2 rounded-lg hover:shadow-lg transition-all duration-300 ">
+            <h2 className="font-bold">Task created successfully! You can view it <Link to="/tasks" className="underline">here</Link></h2>
           </section>
         )}
       </section>

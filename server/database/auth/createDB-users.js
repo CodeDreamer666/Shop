@@ -8,13 +8,13 @@ async function createDBUsers() {
         driver: sqlite3.Database
     });
     await usersDB.exec(`
-        CREATE TABLE IF NOT EXISTS tasks(
+        CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL)`);
     await usersDB.close();
-    console.log("Database-tasks created");
+    console.log("Database-users created");
 }
 
 createDBUsers();

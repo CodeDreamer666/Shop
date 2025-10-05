@@ -11,7 +11,10 @@ async function createDBTasks() {
         CREATE TABLE IF NOT EXISTS tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
-        description TEXT NOT NULL)`);
+        description TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id))`);
+        
     await tasksDB.close();
     console.log("Database-tasks created");
 }
